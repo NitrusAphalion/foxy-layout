@@ -1,41 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.IO;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Xml.Linq;
-
-using NinjaTrader.Core;
+﻿using NinjaTrader.Core;
 using NinjaTrader.Gui;
 using NinjaTrader.Gui.Tools;
 using NinjaTrader.NinjaScript;
-
-using WpfScreenHelper;
 using Serilog.Events;
-
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
+using System.Windows;
+using System.Xml.Linq;
+using WpfScreenHelper;
 using static FoxyLayout.FoxyUtilities;
 
 namespace FoxyLayout
 {
-    public sealed class FoxyLayoutAddOn : AddOnBase
-    {
-		private Window						controlCenter;
-		private NTMenuItem					existingMenuItem;
-		private string						lastActiveWorkspace;
-		private NTMenuItem					newMenuItem;
-		private System.Timers.Timer			sortTimer;
-		private static List<FoxyWindow>		unsortedFoxyWindows;
+	public sealed class FoxyLayoutAddOn : AddOnBase
+	{
+		private Window controlCenter;
+		private NTMenuItem existingMenuItem;
+		private string lastActiveWorkspace;
+		private NTMenuItem newMenuItem;
+		private System.Timers.Timer sortTimer;
+		private static List<FoxyWindow> unsortedFoxyWindows;
 
 		private void OnActiveWorkspaceChanged(object sender, EventArgs e)
-        {
+		{
 			// In the chain of events this is so far always called LAST
 			FoxyLog($"FoxyLayoutAddOn.OnActiveWorkspaceChanged() called: {Globals.ActiveWorkspace}", LogEventLevel.Debug);
 
 			lock (FoxyWindows)
-            {
+			{
 				if (!FoxyWindows.ContainsKey(Globals.ActiveWorkspace))
 					FoxyWindows.Add(Globals.ActiveWorkspace, new List<FoxyWindow>());
 
@@ -61,7 +55,7 @@ namespace FoxyLayout
 						FoxyWindows[Globals.ActiveWorkspace].Add(new FoxyWindow(foxyWorkspace));
 					}
 			}));
-        }
+		}
 
 		protected override void OnStateChange()
 		{
@@ -69,16 +63,16 @@ namespace FoxyLayout
 			if (State == State.SetDefaults)
 			{
 				Description = "(c) 2023 Nitrus Aphalion";
-				Name		= "Foxy Layout";
+				Name = "Foxy Layout";
 			}
 			else if (State == State.Active)
-            {
+			{
 				sortTimer = new System.Timers.Timer(200) { AutoReset = true, Enabled = false };
 				sortTimer.Elapsed += OnSortFoxyWindows;
 
-				FoxyScreens			= new List<FoxyScreen>();
-				FoxyWindows			= new Dictionary<string, List<FoxyWindow>>();
-				FoxyRestore			= new Dictionary<string, XElement>();
+				FoxyScreens = new List<FoxyScreen>();
+				FoxyWindows = new Dictionary<string, List<FoxyWindow>>();
+				FoxyRestore = new Dictionary<string, XElement>();
 				unsortedFoxyWindows = new List<FoxyWindow>();
 
 				lock (FoxyScreens)
@@ -88,7 +82,7 @@ namespace FoxyLayout
 						foreach (Screen screen in Screen.AllScreens)
 							Globals.RandomDispatcher.Invoke(() => // Toss these on different UI threads
 							{
-								FoxyLog($"\tAdding screen '{ screen.DeviceName }' Bounds: { screen.Bounds } WorkingArea: { screen.WorkingArea }");
+								FoxyLog($"\tAdding screen '{screen.DeviceName}' Bounds: {screen.Bounds} WorkingArea: {screen.WorkingArea}");
 								FoxyScreen foxyScreen = new FoxyScreen(screen);
 								foxyScreen.Show();
 								FoxyScreens.Add(foxyScreen);
@@ -97,9 +91,9 @@ namespace FoxyLayout
 				}
 			}
 			else if (State == State.Terminated)
-            {
+			{
 				sortTimer.Elapsed -= OnSortFoxyWindows;
-            }
+			}
 		}
 
 		private void OnMenuItemClick(object sender, RoutedEventArgs e)
@@ -109,9 +103,9 @@ namespace FoxyLayout
 		}
 
 		private void OnSortFoxyWindows(object sender, EventArgs e)
-        {
+		{
 			lock (unsortedFoxyWindows)
-            {
+			{
 				List<FoxyWindow> windowsToRemove = new List<FoxyWindow>();
 				foreach (FoxyWindow foxyWindow in unsortedFoxyWindows)
 				{
@@ -137,7 +131,7 @@ namespace FoxyLayout
 		}
 
 		protected override void OnWindowCreated(Window window)
-        {
+		{
 			FoxyLog($"FoxyLayoutAddOn.OnWindowCreated() called: {window}", LogEventLevel.Debug);
 
 			if (!(window is ControlCenter) && !(window is FoxyWorkspace) && !(bool)typeof(Window).GetField("_showingAsDialog", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(window) && window.ResizeMode != ResizeMode.NoResize && !(window is FoxyWorkspace)) // Don't use layout manager on modal windows, this wont work for winforms afaik
@@ -159,19 +153,19 @@ namespace FoxyLayout
 
 			newMenuItem = new NTMenuItem
 			{
-				Header	= "Foxy Layout",
-				Style	= Application.Current.TryFindResource("MainMenuItem") as Style
+				Header = "Foxy Layout",
+				Style = Application.Current.TryFindResource("MainMenuItem") as Style
 			};
 
 			existingMenuItem.Items.Add(newMenuItem);
 			FoxyLog($"\tAttached Tools -> Foxy Layout menu item...");
 
-			newMenuItem.Click				+= OnMenuItemClick;
-			Globals.ActiveWorkspaceChanged	+= OnActiveWorkspaceChanged;
+			newMenuItem.Click += OnMenuItemClick;
+			Globals.ActiveWorkspaceChanged += OnActiveWorkspaceChanged;
 		}
 
 		protected override void OnWindowDestroyed(Window window)
-        {
+		{
 			FoxyLog($"FoxyLayoutAddOn.OnWindowDestroyed() called: {window}", LogEventLevel.Debug);
 			lock (FoxyWindows)
 				if (FoxyWindows.SelectMany(kvp => kvp.Value).FirstOrDefault(fw => fw.Window == window) is FoxyWindow foxyWindow)
@@ -183,13 +177,13 @@ namespace FoxyLayout
 						if (kvp.Value.Contains(foxyWindow))
 						{
 							FoxyWindows[kvp.Key].Remove(foxyWindow);
-							FoxyLog($"\tRemoved window '{ foxyWindow.Window }'");
+							FoxyLog($"\tRemoved window '{foxyWindow.Window}'");
 						}
 					}
 				}
 
 			if (window is ControlCenter)
-            {
+			{
 				lock (FoxyScreens)
 					FoxyScreens.Clear();
 				lock (FoxyWindows)
@@ -200,7 +194,7 @@ namespace FoxyLayout
 				Serilog.Log.CloseAndFlush();
 
 				if (newMenuItem != null)
-                {
+				{
 					if (existingMenuItem != null && existingMenuItem.Items.Contains(newMenuItem))
 						existingMenuItem.Items.Remove(newMenuItem);
 
@@ -212,8 +206,8 @@ namespace FoxyLayout
 			}
 		}
 
-		internal static List<FoxyScreen>						FoxyScreens			{ get; set; }
-		internal static Dictionary<string, List<FoxyWindow>>	FoxyWindows			{ get; set; }
-		internal static Dictionary<string, XElement>			FoxyRestore			{ get; set; }
+		internal static List<FoxyScreen> FoxyScreens { get; set; }
+		internal static Dictionary<string, List<FoxyWindow>> FoxyWindows { get; set; }
+		internal static Dictionary<string, XElement> FoxyRestore { get; set; }
 	}
 }
