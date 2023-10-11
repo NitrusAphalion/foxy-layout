@@ -9,8 +9,12 @@ Features:
  - Drag and drop to organize windows
  - Rotate through possible layouts of the same drag position on a timer (Just drop when you see the one you want)
  - Resize multiple windows together
- - Bing all windows to front when one is clicked
  - Unique control center position PER WORKSPACE
+ - Under Tools -> Foxy Layout you can customize:
+     - Whether the snapping behavior applies automatically or only when you drag and drop while holding a modifier key
+     - Whether to bring all windows to front when one is clicked
+     - The background/border for the drag/drop zone
+     - The background/border for the 'illegal operation' zone
 
 Note: There are still some quirks for this running on multi-monitor and 4k setups.
 
